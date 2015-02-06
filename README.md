@@ -1,7 +1,5 @@
 # GASPI-Applications
 
-## startup-scripts
-
 SLURM
 =====
 
