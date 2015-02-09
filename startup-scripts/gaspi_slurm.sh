@@ -4,7 +4,7 @@ function mysort { for i in ${node_array[@]}; do echo "$i"; done | sort -n; }
 
 program=$*
 
-export GASPI_SOCKET="$SLURM_PROCID"
+export GASPI_SOCKET="$SLURM_LOCALID"
 export GASPI_MFILE="$HOME/machinefile_$GASPI_SOCKET"
 
 NODES=`srun hostname`
