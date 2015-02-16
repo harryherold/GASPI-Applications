@@ -167,6 +167,22 @@ init_map(uint64_t m, uint64_t n, size_t typesize )
 }
 
 void
+init_halos(uint64_t m, uint64_t n, size_t typesize)
+{
+	north_halo.halo_offset = typesize;
+	north_halo.jump_offset = NO_JUMP;
+
+	south_halo.halo_offset = (((n - 1) * m) + 1) * typesize;
+	south_halo.jump_offset = NO_JUMP;
+
+	west_halo.halo_offset = m * typesize;
+	west_halo.jump_offset = m * typesize;
+
+	east_halo.halo_offset = ((2 * m) - 1) * typesize;
+	east_halo.jump_offset = m * typesize;
+}
+
+void
 init_neightbours(uint64_t m, uint64_t n, size_t typesize)
 {
 	if(((rank + 1) % rank_col_count) != 0 )
