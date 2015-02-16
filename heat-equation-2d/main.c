@@ -1,25 +1,4 @@
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <GASPI.h>
-
-#define IDX(I,J,W) ((I)*(W)+(J))
-#define TIMEOUT 2000
-#define NO_NEIGHBOUR        -1
-#define NO_JUMP              0
-#define NOTIFY_ID_NORTH_HALO 1
-#define NOTIFY_ID_EAST_HALO  2
-#define NOTIFY_ID_SOUTH_HALO 3
-#define NOTIFY_ID_WEST_HALO  4
-
-#define NOTIFY_VAL_NORTH_HALO 41
-#define NOTIFY_VAL_EAST_HALO  42
-#define NOTIFY_VAL_SOUTH_HALO 43
-#define NOTIFY_VAL_WEST_HALO  44
-
-
-typedef int64_t neighbour_rank_t;
+#include "heat.h"
 
 gaspi_segment_id_t uid   = 0;
 gaspi_segment_id_t vid   = 1;
@@ -31,51 +10,31 @@ double heat_u_min= 10.0;
 double heat_u_max= 100.0;
 double heat_alpha= 22.0;
 
-double * u_double_ptr = NULL;
-double * v_double_ptr = NULL;
-double * a_double_ptr = NULL;
+double * u_double_ptr  = NULL;
+double * v_double_ptr  = NULL;
+double * a_double_ptr  = NULL;
 double * hu_double_ptr = NULL;
 double * hv_double_ptr = NULL;
 
 uint64_t m              = 0;
 uint64_t n              = 0;
-uint64_t rank_col_count = 2;
-uint64_t rank_row_count = 2;
+int64_t rank_col_count  = 3;
+int64_t rank_row_count  = 3;
 
 size_t typesize         = 0;
 
 gaspi_rank_t rank;
 gaspi_rank_t rankcount;
 
-typedef struct halo_offset
-{
-	gaspi_offset_t halo_offset;
-	gaspi_offset_t jump_offset;
-}halo_offset_t;
-
-typedef struct neighbour{
-	neighbour_rank_t        rank_no;
-	gaspi_notification_id_t notify_id;
-	gaspi_notification_t    notify_value;
-	gaspi_offset_t			data_offset;
-	gaspi_offset_t			jump_offset;
-}neighbour_t;
-
-halo_offset_t north_halo;
-halo_offset_t east_halo;
-halo_offset_t south_halo;
-halo_offset_t west_halo;
+halo_t north_halo;
+halo_t east_halo;
+halo_t south_halo;
+halo_t west_halo;
 
 neighbour_t north_rank;
 neighbour_t east_rank;
 neighbour_t south_rank;
 neighbour_t west_rank;
-
-typedef enum seg_type
-{
-	SEG_U,
-	SEG_V
-}seg_type_t;
 
 void
 check_errors( gaspi_return_t retval, char * function, char * msg )
@@ -115,6 +74,9 @@ init_map(uint64_t m, uint64_t n, size_t typesize )
 	gaspi_pointer_t u_ptr  = NULL;
 	gaspi_pointer_t v_ptr  = NULL;
 	gaspi_pointer_t a_ptr  = NULL;
+
+	init_halos(m, n, typesize);
+	init_neightbours(m, n, typesize);
 
 	ret = gaspi_segment_create(uid, m * n * typesize, GASPI_GROUP_ALL,
 			GASPI_BLOCK, GASPI_MEM_INITIALIZED);
@@ -272,7 +234,7 @@ read_halo(neighbour_t neighbour, halo_t halo_offset, seg_type_t seg_type, size_t
 }
 
 void
-finish_map()
+finish_map(void)
 {
 	gaspi_segment_delete(uid);
 	gaspi_segment_delete(vid);
@@ -317,14 +279,12 @@ main(int argc, char ** argv)
   gaspi_proc_rank(&rank);
   gaspi_proc_num(&rankcount);
 
-  m = (12 / rankcount) + 1;
-  n = (12 / rankcount) + 1;
-
-  init_neightbours(m, n, typesize);
+  m = (54 / rankcount) + 1;
+  n = (54 / rankcount) + 1;
 
   init_map(m, n, typesize);
 
-  finish_map(uid, vid, aid);
+  finish_map();
 
   gaspi_proc_term( GASPI_BLOCK );
 

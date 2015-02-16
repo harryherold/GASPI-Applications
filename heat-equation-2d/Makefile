@@ -1,5 +1,5 @@
 TOPROOT = $(PWD)
-GASPI_DIR = /home/harry/GPI-2
+GASPI_DIR = $(GPI2_ROOT)
 
 BIN_DIR = $(PWD)/bin
 
@@ -8,9 +8,9 @@ CC =  gcc
 #gcc
 CFLAGS = -Wall -c -std=gnu99
 
-SOURCES = main.c
+SOURCES = main.c test.c
 
-LIBS    = -L$(GASPI_DIR)/lib64 -libverbs -lpthread -lrt -lGPI2  -Wl,-rpath=$(GASPI_DIR)/lib64:
+LIBS    = -L$(GASPI_DIR)/lib -libverbs -lpthread -lrt -lGPI2  -Wl,-rpath=$(GASPI_DIR)/lib:
 INCLUDE = -I$(GASPI_DIR)/include -I./
 
 OBJS = $(SOURCES:%.c=%.o)
