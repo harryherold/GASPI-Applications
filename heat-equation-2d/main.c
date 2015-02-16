@@ -185,46 +185,59 @@ init_halos(uint64_t m, uint64_t n, size_t typesize)
 void
 init_neightbours(uint64_t m, uint64_t n, size_t typesize)
 {
-	if(((rank + 1) % rank_col_count) != 0 )
+	int64_t col_idx = rank % rank_col_count;
+	int64_t row_idx = rank / rank_col_count;
+
+	if(col_idx + 1 < rank_col_count)
 	{
 		east_rank.rank_no       = rank + 1;
 		east_rank.notify_id     = NOTIFY_ID_WEST_HALO;
 		east_rank.notify_value  = NOTIFY_VAL_WEST_HALO;
-		east_rank.data_offset   = typesize;
+		east_rank.data_offset   = (m + 1) * typesize;
 		east_rank.jump_offset   = m * typesize;
+		east_rank.element_count = n - 2;
+		gaspi_printf("east %d\n",east_rank.rank_no);
 	}
 	else
 		east_rank.rank_no       = NO_NEIGHBOUR;
 
-	if((rank  % rank_col_count) != 0 )
+	if(col_idx - 1 >= 0)
 	{
 		west_rank.rank_no       = rank - 1;
 		west_rank.notify_id     = NOTIFY_ID_EAST_HALO;
 		west_rank.notify_value  = NOTIFY_VAL_EAST_HALO;
-		west_rank.data_offset   = (m - 2) * typesize;
+		west_rank.data_offset   = ((2 * m) - 2) * typesize;
 		west_rank.jump_offset   = m * typesize;
+		west_rank.element_count = n - 2;
+		gaspi_printf("west %d\n",west_rank.rank_no);
 	}
 	else
 		west_rank.rank_no       = NO_NEIGHBOUR;
 
-	if((rank - rank_col_count) >= 0)
+	if(row_idx - 1 >= 0)
 	{
-		north_rank.rank_no      = rank - rank_col_count;
-		north_rank.notify_id    = NOTIFY_ID_SOUTH_HALO;
-		north_rank.notify_value = NOTIFY_VAL_SOUTH_HALO;
-		north_rank.data_offset  = (n - 2) * m * typesize;
-		north_rank.jump_offset  = NO_JUMP;
+		north_rank.rank_no       = rank - rank_col_count;
+		north_rank.notify_id     = NOTIFY_ID_SOUTH_HALO;
+		north_rank.notify_value  = NOTIFY_VAL_SOUTH_HALO;
+		north_rank.data_offset   = (((n - 2) * m) + 1) * typesize;
+		north_rank.jump_offset   = NO_JUMP;
+		north_rank.element_count = m - 2;
+
+		gaspi_printf("north %d\n",north_rank.rank_no);
 	}
 	else
 		north_rank.rank_no      = NO_NEIGHBOUR;
 
-	if((rank + rank_col_count) < (rank_col_count * rank_row_count))
+	if(row_idx + 1 < rank_row_count)
 	{
-		south_rank.rank_no      = rank + rank_row_count;
-		south_rank.notify_id    = NOTIFY_ID_NORTH_HALO;
-		south_rank.notify_value = NOTIFY_VAL_NORTH_HALO;
-		south_rank.data_offset  = m * typesize;
-		south_rank.jump_offset  = NO_JUMP;
+		south_rank.rank_no       = rank + rank_col_count;
+		south_rank.notify_id     = NOTIFY_ID_NORTH_HALO;
+		south_rank.notify_value  = NOTIFY_VAL_NORTH_HALO;
+		south_rank.data_offset   = (m + 1) * typesize;
+		south_rank.jump_offset   = NO_JUMP;
+		south_rank.element_count = m - 2;
+
+		gaspi_printf("south %d\n",south_rank.rank_no);
 	}
 	else
 		south_rank.rank_no      = NO_NEIGHBOUR;
