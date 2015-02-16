@@ -279,6 +279,29 @@ finish_map()
 	gaspi_segment_delete(aid);
 }
 
+FILE *
+get_file_handle(void)
+{
+	char buffer[128];
+	int n = sprintf(buffer,"/home/cherold/map-rank-%d.txt",rank);
+	buffer[n] = '\0';
+	return fopen(buffer,"w");
+}
+
+void
+print_map(FILE * out, seg_type_t seg)
+{
+	double * ptr = (seg == SEG_U) ? u_double_ptr : v_double_ptr;
+	for(uint64_t i = 0 ; i < n ; ++i)
+	{
+		for(uint64_t j = 0 ; j < m ; ++j )
+		{
+			fprintf(out, "%lf ", ptr[IDX(i,j,m)]);
+		}
+		fprintf(out, "\n");
+	}
+}
+
 int
 main(int argc, char ** argv)
 {
