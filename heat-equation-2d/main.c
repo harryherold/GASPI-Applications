@@ -244,9 +244,31 @@ init_neightbours(uint64_t m, uint64_t n, size_t typesize)
 }
 
 gaspi_return_t
-read_data(neighbour_t * neighbour, halo_offset_t halo_offset, seg_type_t seg_type)
+read_halo(neighbour_t neighbour, halo_t halo_offset, seg_type_t seg_type, size_t typesize)
 {
-	return GASPI_SUCCESS;
+	gaspi_return_t ret = GASPI_SUCCESS;
+	gaspi_segment_id_t segid = (seg_type == SEG_U) ? uid : vid;
+	gaspi_queue_id_t queue_id = 0;
+	gaspi_size_t i_max = (neighbour.jump_offset != NO_JUMP) ? neighbour.element_count : 1;
+	gaspi_size_t read_count = (neighbour.jump_offset != NO_JUMP) ? 1UL : neighbour.element_count;
+
+	for(gaspi_size_t i = 0 ; i < i_max ; ++i)
+	{
+		check_dma_requests(queue_id);
+
+		ret = gaspi_read(segid,
+				         halo_offset.halo_offset + (i * halo_offset.jump_offset),
+						 neighbour.rank_no,
+						 segid,
+						 neighbour.data_offset + (i * neighbour.jump_offset),
+						 read_count * typesize,
+						 queue_id,
+						 GASPI_BLOCK);
+
+		check_errors(ret, "read_halo", "gaspi_read");
+	}
+
+	return ret;
 }
 
 void
