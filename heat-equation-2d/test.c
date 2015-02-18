@@ -88,3 +88,47 @@ test_read_halo(uint64_t m, uint64_t n, size_t typesize)
 
 	gaspi_barrier(GASPI_GROUP_ALL, GASPI_BLOCK);
 }
+
+void test_notify_all()
+{
+	seg_type_t seg_type = SEG_U;
+	gaspi_barrier(GASPI_GROUP_ALL, GASPI_BLOCK);
+	notify_all_neighbours(seg_type, 0);
+
+	gaspi_return_t ret = GASPI_SUCCESS;
+	gaspi_segment_id_t seg = SEG_ID(seg_type);
+
+	FILE * out = get_file_handle();
+
+	for (uint64_t i = 0; i < neighbour_count; ++i)
+	{
+		gaspi_notification_id_t notify_id;
+		gaspi_notification_t    notify_val;
+
+		ret = blocking_waitsome(NOTIFY_ID_BEGIN, NOTIFY_ID_END, &notify_id, &notify_val, seg);
+		check_errors(ret, "test_notify_all", "blocking_waitsome");
+
+		if (check_notify(north_rank, notify_id, notify_val))
+		{
+			fprintf(out, "get notify from north rank %lu\n",north_rank.rank_no);
+		}
+		if (check_notify(south_rank, notify_id, notify_val))
+		{
+			fprintf(out, "get notify from south rank %lu\n",south_rank.rank_no);
+			gaspi_printf("south rank\n");
+		}
+		if (check_notify(east_rank, notify_id, notify_val))
+		{
+			gaspi_printf("east rank\n");
+			fprintf(out, "get notify from east rank %lu\n",east_rank.rank_no);
+		}
+		if (check_notify(west_rank, notify_id, notify_val))
+		{
+			fprintf(out, "get notify from west rank %lu\n",west_rank.rank_no);
+		}
+	}
+
+	fclose(out);
+	gaspi_barrier(GASPI_GROUP_ALL, GASPI_BLOCK);
+}
+
