@@ -3,12 +3,13 @@
 void
 test_read_halo(uint64_t m, uint64_t n, size_t typesize)
 {
+    gaspi_queue_id_t queue_id = 0;
 	gaspi_barrier(GASPI_GROUP_ALL, GASPI_BLOCK);
 
 	if(west_rank.rank_no != NO_NEIGHBOUR)
 	{
-		read_halo(west_rank, west_halo, SEG_V, typesize);
-		gaspi_wait(0, GASPI_BLOCK);
+		read_halo(west_rank, west_halo, SEG_V, typesize, queue_id);
+		gaspi_wait(queue_id, GASPI_BLOCK);
 
 		gaspi_pointer_t seg_ptr;
 		gaspi_segment_ptr(vid, &seg_ptr);
@@ -24,8 +25,8 @@ test_read_halo(uint64_t m, uint64_t n, size_t typesize)
 
 	if(east_rank.rank_no != NO_NEIGHBOUR)
 	{
-		read_halo(east_rank, east_halo, SEG_V, typesize);
-		gaspi_wait(0, GASPI_BLOCK);
+		read_halo(east_rank, east_halo, SEG_V, typesize, queue_id);
+		gaspi_wait(queue_id, GASPI_BLOCK);
 
 		gaspi_pointer_t seg_ptr;
 		gaspi_segment_ptr(vid, &seg_ptr);
@@ -42,8 +43,8 @@ test_read_halo(uint64_t m, uint64_t n, size_t typesize)
 
 	if(north_rank.rank_no != NO_NEIGHBOUR)
 	{
-		read_halo(north_rank, north_halo, SEG_V, typesize);
-		gaspi_wait(0, GASPI_BLOCK);
+		read_halo(north_rank, north_halo, SEG_V, typesize, queue_id);
+		gaspi_wait(queue_id, GASPI_BLOCK);
 
 		gaspi_pointer_t seg_ptr;
 		gaspi_segment_ptr(vid, &seg_ptr);
@@ -60,8 +61,8 @@ test_read_halo(uint64_t m, uint64_t n, size_t typesize)
 
 	if(south_rank.rank_no != NO_NEIGHBOUR)
 	{
-		read_halo(south_rank, south_halo, SEG_V, typesize);
-		gaspi_wait(0, GASPI_BLOCK);
+		read_halo(south_rank, south_halo, SEG_V, typesize, queue_id);
+		gaspi_wait(queue_id, GASPI_BLOCK);
 
 		gaspi_pointer_t seg_ptr;
 		gaspi_segment_ptr(vid, &seg_ptr);
@@ -77,14 +78,14 @@ test_read_halo(uint64_t m, uint64_t n, size_t typesize)
 		}
 	}
 
-	FILE * out = get_file_handle();
-	if (out == NULL)
-	{
-		gaspi_printf("Get no file handle\n");
-		return;
-	}
-	print_map(out, SEG_V);
-	fclose(out);
+	//~ FILE * out = get_file_handle();
+	//~ if (out == NULL)
+	//~ {
+		//~ gaspi_printf("Get no file handle\n");
+		//~ return;
+	//~ }
+	//~ print_map(out, SEG_V);
+	//~ fclose(out);
 
 	gaspi_barrier(GASPI_GROUP_ALL, GASPI_BLOCK);
 }
@@ -98,7 +99,7 @@ void test_notify_all()
 	gaspi_return_t ret = GASPI_SUCCESS;
 	gaspi_segment_id_t seg = SEG_ID(seg_type);
 
-	FILE * out = get_file_handle();
+	FILE * out = get_file_handle("test-halo");
 
 	for (uint64_t i = 0; i < neighbour_count; ++i)
 	{

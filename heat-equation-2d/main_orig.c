@@ -148,7 +148,7 @@ init_map(uint64_t m, uint64_t n, size_t typesize)
     for (size_t i = 0; i < n; ++i)
     {
     int global_y = get_global_y(i);
-    char is_hot = (global_y < (matrix_height / 3));
+        char is_hot = (global_y < (matrix_height / 3));
 
     for (size_t j = 0; j < m; ++j)
         {
@@ -346,9 +346,8 @@ notify_neighbour(neighbour_t n, seg_type_t seg_type, gaspi_queue_id_t qid)
 {
     gaspi_segment_id_t seg_id = SEG_ID(seg_type);
     gaspi_return_t ret = GASPI_SUCCESS;
-
-    ret = gaspi_notify(seg_id, n.rank_no, n.send_id, n.send_value, qid,
-               TIMEOUT);
+    check_dma_requests(qid);
+    ret = gaspi_notify(seg_id, n.rank_no, n.send_id, n.send_value, qid, TIMEOUT);
     check_errors(ret, "notify_neighbour", NULL);
 
     return ret;
@@ -537,13 +536,13 @@ main(int argc, char ** argv)
 
     if(!evalute_arguments(argc, argv))
     {
-        gaspi_printf("Wrong arguments or argument types\n");
-        return EXIT_FAILURE;
+    gaspi_printf("Wrong arguments or argument types\n");
+    return EXIT_FAILURE;
     }
 
     if(btime != 0 && btime[0] == '1')
     {
-        start_wtime = get_wtime();
+    start_wtime = get_wtime();
     }
 
     if (gaspi_proc_init( GASPI_BLOCK ) != GASPI_SUCCESS)
@@ -586,12 +585,8 @@ main(int argc, char ** argv)
 
         if(north_rank.rank_no != NO_NEIGHBOUR)
         {
-            if(i > 0)
-                gaspi_wait(queue_north_read, GASPI_BLOCK);
-
             residual = compute_heat(u, v, 1, 2, residual);
-            wait_for_queue_entries(&queue_notify, 1);
-            ret = notify_neighbour(north_rank, seg_type, queue_notify);
+            ret = notify_neighbour(north_rank, seg_type, queue_north_read);
             check_errors(ret, "notify_all_neighbours", "to north rank");
 
             residual = compute_heat(u, v, 2, n - 2, residual);
@@ -602,12 +597,8 @@ main(int argc, char ** argv)
         }
         if(south_rank.rank_no != NO_NEIGHBOUR)
         {
-            if(i > 0)
-                gaspi_wait(queue_south_read, GASPI_BLOCK);
-
             residual = compute_heat(u, v, n - 2, n - 1, residual);
-            wait_for_queue_entries(&queue_notify, 1);
-            ret = notify_neighbour(south_rank, seg_type, queue_notify);
+            ret = notify_neighbour(south_rank, seg_type, queue_north_read);
             check_errors(ret, "notify_all_neighbours", "to north rank");
         }
         else
@@ -615,8 +606,8 @@ main(int argc, char ** argv)
             residual = compute_heat(u, v, n - 2, n - 1, residual);
         }
 
-        read_all_halos(seg_type, typesize, queue_north_read, queue_south_read);
-
+        read_all_halos(seg_type, typesize, queue_north_read, queue_north_read);
+        gaspi_wait(queue_north_read, GASPI_BLOCK);
         seg_type = (seg_type == SEG_U) ? SEG_V : SEG_U;
 
         t = u;
@@ -634,9 +625,9 @@ main(int argc, char ** argv)
 
     if(btime != 0 && btime[0] == '1' && rank == 0)
     {
-        end_wtime = get_wtime();
+    end_wtime = get_wtime();
 
-        FILE * fout = get_file_handle("master-thesis/thesis-trace/heat-opt/heat-times");
+        FILE * fout = get_file_handle("master-thesis/thesis-trace/heat-orig/heat-times");
 
         if (fout == NULL)
         {
