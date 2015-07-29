@@ -18,3 +18,4 @@ GASPI-UTILS consists of the following functions and mechanisms:
 * function that returns a queue which has a number of free entries or blocks if there is no suitable queue
 * blocking waitsome function, which calls a waitsome and reset
 * flushing of queues (in a range)
+* Marcos to check errors of GASPI function calls
