@@ -4,10 +4,11 @@ function mysort { for i in ${node_array[@]}; do echo "$i"; done | sort -n; }
 
 program=$*
 
-export GASPI_SOCKET="$SLURM_LOCALID"
-export GASPI_MFILE="$HOME/machinefile_$SLURM_PROCID"
+# requires to variable NODES in batch script
 
-NODES=`srun hostname`
+TMP_PATTERN=".gpi2.XXXXXXXX"
+export GASPI_SOCKET="$SLURM_LOCALID"
+export GASPI_MFILE=$(mktemp --tmpdir=/tmp ${TMP_PATTERN})
 
 node_array=($NODES)
 
