@@ -1,6 +1,7 @@
 #include "gaspi_utils.h"
 #include <string.h>
 
+static unsigned long long test_case_count;
 static gaspi_segment_id_t gaspi_utils_seg_counter;
 
 void delete_all_segments() {

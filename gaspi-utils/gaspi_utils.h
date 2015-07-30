@@ -48,4 +48,30 @@ void flush_queues(gaspi_queue_id_t queue_begin, gaspi_queue_id_t queue_count);
       }                                                                          \
     }while (0)
 
+typedef struct reportentry{
+  unsigned int id;
+  char ret;
+  int line_num;
+}report_entry_t;
+
+extern unsigned long long test_case_count;
+extern gaspi_pointer_t test_seg_ptr;
+extern report_entry_t * report_ptr;
+
+void report_to_master(unsigned long long idx);
+
+#define TEST_EQUAL(id, expected, actual)           \
+  do{                                              \
+    const unsigned int idx = __COUNTER__;          \
+    report_ptr[idx].id       = id;                 \
+    report_ptr[idx].line_num = __LINE__;           \
+    report_ptr[idx].ret      = expected == actual; \
+    report_to_master(idx);                         \
+  }while(0)
+
+void init_gaspi_test(gaspi_segment_id_t seg_num, gaspi_rank_t master_rank);
+void finish_gaspi_test(void);
+
+
+
 #endif // GASPI_UTILS_H
